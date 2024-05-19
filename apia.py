@@ -2,20 +2,25 @@ from io import TextIOWrapper
 import requests
 from bs4 import BeautifulSoup
 import csv
+from datetime import date
+from dotenv import dotenv_values
 
-from secret_file import payload
+# from secret_file import payload
+env = dotenv_values('.env')
 
-# payload = {
-#   'name': 'ROXXXXXXXXX',
-#   'password': 'abcd1234'
-# }
+payload = {
+  'name': env['USERNAME'],
+  'password': env['PASSWORD']
+}
+
+print(payload)
 
 try:
   output_file = open('apia_surfaces.txt', 'w')
 except:
   output_file = open('apia_surfaces.txt', 'x')
 
-YEAR = 2023
+YEAR = date.today().year
 
 login_url = 'https://lpis.apia.org.ro/mapbender/frames/login.php'
 page_url = f'https://lpis.apia.org.ro/reporting/{YEAR}/ipa_online/parcel_control.php?farmid={payload["name"]}&sirsup_code=&bloc_nr='
@@ -24,8 +29,9 @@ apia_codes = {
   'GRAU': '101',
   'PORUMB': '108',
   'FLOAREA-SOARELUI': '201',
-  'LUCERNA - 9741': '9741',
-  'LUCERNA - 974': '974',
+  'ORZ': '105',
+  'ORZOAICA': '106',
+  'LUCERNA': '9741',
 }
 
 
@@ -75,12 +81,11 @@ def get_parcel_details(apia_codes: dict, soup: BeautifulSoup):
   
 
 with requests.Session() as session:
-
   # log in to page to get the cookies
   p = session.post(url=login_url, data=payload)
   # use the cookies to enter the actual page
   html_doc = requests.get(url=page_url, cookies=p.cookies, data=payload)
   soup = BeautifulSoup(html_doc.text, 'html.parser')
   # then calculet the surfaces
-  # get_total_surface(apia_codes, soup, output_file)
-  get_parcel_details(apia_codes, soup)
+  get_total_surface(apia_codes, soup, output_file)
+  # get_parcel_details(apia_codes, soup)
